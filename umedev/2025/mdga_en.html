@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Make Migrations Great Again</title>
+
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/beige.css" id="theme">
+    <link rel="stylesheet" href="plugin/highlight/windows-95.css">
+</head>
+
+<body>
+
+    <div class="reveal">
+
+        <div class="slides">
+            <section data-markdown data-transition="convex" data-separator-vertical="^--$">
+                <script type="text/template">
+                    # Make Database Migrations Great Again
+
+                    ---
+
+                    ## About Me
+                    ```json [2|3|4|5]
+                    {
+                        "Name": "Ragnar Eklund"
+                        "Age": "42"
+                        "Work": "Visionite / Skatteverket"
+                        "Favourite_language": [object Object]
+                    }
+                    ```
+                    ---
+                    ## Why am I here?
+                    I want to share some experience about creating a small testing tool to make database migrations in Java a bit easier.
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ## Here's how it works
+                    
+                    ```java [6: 2-5|7]
+                    @Test
+                    void testMigration() {
+                        var result = Migration.configure()
+                                .includePackages("adapter.database.models.jpa")
+                                .test();
+
+                        assertThat(result).isEmpty();
+                    }
+                    ```
+                    <!-- .element: data-id="migration-test" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ## Here's how it works
+
+                    ```java [6: 11-15]
+                    @Test
+                    void testMigration() {
+                        var result = Migration.configure()
+                                .includePackages("adapter.database.models.jpa")
+                                .test();
+
+                        assertThat(result).isEmpty();
+                    }
+
+                    /*
+                    java.lang.AssertionError: 
+                    Expecting empty but was:
+
+                    ALTER TABLE Books 
+                    ADD COLUMN Pages INTEGER;
+                    */
+                    ```
+                    <!-- .element: data-id="migration-test" -->
+                    ---
+                    ## What is it good for?
+                    ### Agenda
+                    ``` []
+                    1. Background
+                    2. What is a database migration?
+                    3. Different solutions
+                    4. What is Java's problem?
+                      * JPA
+                      * Hibernate
+                      * Flyway
+                    5. How to solve it
+                      * Spring Boot?
+                      * 
+                    ```
+
+                    ---
+
+                    ## Background
+                    * I'v been working with Rails and Django before <!-- .element: class="fragment fade-up" data-fragment-index="1" -->
+                    * Been working with Java the last 5 years <!-- .element: class="fragment fade-up" data-fragment-index="2" -->
+
+                    notes: Rails and Django are framwork that has great database migration support
+                    
+                    ---
+                    ### What is a database migration?
+                    
+                    --
+                    <!-- .slide: data-background-gradient="radial-gradient(#FEFEFB, #A7A285)" -->
+                    A description of how to transfer your database from one state to another
+                    <!-- .element: style="font-family: monospace" -->
+
+                    --
+                    ## Example
+                    Add a column to a table with Books
+                    ```markdown [1-4]
+                    |Column   |Type   |
+                    |---------|-------|
+                    |BookTitle|VARCHAR|
+                    |Author   |VARCHAR|
+                    |Pages    |INTEGER|
+                    ```
+                    
+                    --
+                    ## How to solve this?
+                    --
+                    Different tools have different solutions
+                    ---
+                    ## Migration Tools Basics
+                    * Running each migration in order <!-- .element: class="fragment fade-up" data-fragment-index="1" -->
+                    * Make it reproducable <!-- .element: class="fragment fade-up" data-fragment-index="2" -->
+                    * Make sure to keep track of what have been run allready <!-- .element: class="fragment fade-up" data-fragment-index="3" -->
+                    --
+                    Migration Examples
+                    --
+                    ### Rember our Books table?
+                    ```md [1-4|1-5]
+                    |Column   |Type   |
+                    |---------|-------|
+                    |BookTitle|VARCHAR|
+                    |Author   |VARCHAR|
+                    |Pages    |INTEGER|
+                    ```
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ### Python and Django framework
+                    ```python []
+                    class Book(models.Model):
+                        book_title = models.CharField(max_length=50)
+                        author = models.CharField(max_length=50)
+                    ```
+                    <!-- .element: data-id="python-pages" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ### Python and Django framework
+                    ```python []
+                    class Book(models.Model):
+                        book_title = models.CharField(max_length=50)
+                        author = models.CharField(max_length=50)
+                        pages = models.IntegerField()
+                    ```
+                    <!-- .element: data-id="python-pages" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ### Identify changes and generate migrations
+                    ```bash []
+                    $ python manage.py makemigrations
+                    ```
+                    <!-- .element: data-id="python-make-migrations-animation" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ### Identify changes and generate migrations
+                    ```bash []
+                    $ python manage.py makemigrations
+                    Migrations for 'books':
+                    books/migrations/0002_auto.py:
+                        ~ Alter field pages on books
+                    ```
+                    <!-- .element: data-id="python-make-migrations-animation" -->
+                    --
+                    ### The result
+                    ```python []
+                    class Migration(migrations.Migration):
+                        dependencies = [("migrations", "0001_initial")]
+                        operations = [
+                            migrations.AddField("Books", "Pages"),
+                        ]
+                    ```
+                    --
+                    ## Ruby on Rails
+                    --
+                    ### Different approach
+                    Models are generated from the tabels in the database
+                    ```ruby
+                    class Book < ApplicationRecord
+                    end
+                    ```
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ### Create changes and generate migrations
+                    ```bash []
+                    $ rails generate migration AddPagesToBooks pages:number
+                    ```
+                    <!-- .element: data-id="rails-make-migrations-animation" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ### Create changes and generate migrations
+                    ```ruby []
+                    # rails generate migration AddPagesToBooks pages:number
+                    class AddPagesToBooks &lt; ActiveRecord::Migration
+                      def change
+                        add_column :books, :pages, :number
+                      end
+                    end
+                    ```
+                    <!-- .element: data-id="rails-make-migrations-animation" -->
+                    --
+                    ## Java and Flyway
+                    None of the big frameworks offer any built in migration tool, but rely on third party options like **Flyway**.
+                    --
+                    ### Flyway
+                    Using regular SQL and file naming convention for migrations.
+                    ```bash
+                    $ ls src/main/java/resources/db/migrations
+                    V1.0__init.sql
+                    V1.1__addPagesToBooks.sql
+                    ```
+                    <!-- .element: class="fragment fade-up" -->
+                    ```sql
+                    -- V1.1__addPagesToBooks.sql
+                    ALTER TABLE Books
+                    ADD COLUMN Pages INTEGER
+                    ```
+                    <!-- .element: class="fragment fade-up" -->
+                    --
+                    ### Creating migrations...
+                    Unlike Django and Rails Flyway cannot generate migrations for you. <!-- .element: class="fragment fade-up" -->
+                    Because Flyway doesn't know your data representation. <!-- .element: class="fragment fade-up" -->
+                    ## That is annoing! <!-- .element: class="fragment fade-up" -->
+                    
+                    ---
+                    
+                    ## How to fix this?
+                    --
+                    ## JPA
+                    Jakarta Persistance. (Former Java Persistance API)
+                    --
+                    Let you describe your database model with code
+                    
+                    --
+                    ```java [1-11|1,3,6,9]
+                    @Entity
+                    public class Book {
+                        @Id
+                        String isbn;
+                        
+                        @Column(name = "bookTitle")
+                        String title;
+
+                        @Column(name = "author")
+                        String authors;
+                    }
+                    ```
+                    ---
+
+                    ## Hibernate
+                    
+                    --
+
+                    Implementation of JPA
+
+                    Also known as "Object-Relational Mapping" <!-- .element: class="fragment fade-up" data-fragment-index="1" -->
+                    
+                    --
+
+                    ### What does Hibernate do?
+                    * Connects your data models with your database through JPA
+                    * Works both ways
+
+                    notes: Mapping the JPA data model to your database and the other way around
+
+                    ---
+                    ### Python and Django framework
+                    ```bash [1|2-4]
+                    $ python manage.py makemigrations
+                    Migrations for 'books':
+                    books/migrations/0002_auto.py:
+                        ~ Alter field pages on books
+                    ```
+
+                    --
+
+                    ### Ruby and Rails framework
+                    ```bash []
+                    $ rails generate migration AddPagesToBooks pages:number
+                    ```
+
+                    --
+
+                    ### Java...
+                    ```bash []
+                    $ ???
+                    ```
+                    --
+                    ## Why
+
+                    --
+                    ### SQL
+                    ```sql []
+                    ALTER TABLE Books
+                    ADD COLUMN Pages INTEGER
+                    ```
+                    
+                    --
+                    
+                    
+                    --
+                    ### Rails (Ruby)
+                    ```ruby []
+                    class AddPagesToBooks < ActiveRecord::Migration
+                      def change
+                        add_column :books, :pages, :number
+                      end
+                    end
+                    ```
+                </script>
+            </section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/math/math.js"></script>
+
+    <script>
+
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            history: true,
+            center: true,
+
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX]
+        });
+
+    </script>
+
+</body>
+
+</html>

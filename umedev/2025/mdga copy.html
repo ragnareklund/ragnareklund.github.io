@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Make Migrations Great Again</title>
+
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/beige.css" id="theme">
+    <link rel="stylesheet" href="plugin/highlight/windows-95.css">
+</head>
+
+<body>
+
+    <div class="reveal">
+
+        <div class="slides">
+            <section data-markdown data-transition="convex" data-separator-vertical="^--$">
+                <script type="text/template">
+                    # Make Migrations Great Again
+
+                    ---
+
+                    ## About Me
+                    ```json [2|3|4|5]
+                    {
+                        "Name": "Ragnar Eklund"
+                        "Age": "42"
+                        "Last occupation": "Visionite / Skatteverket"
+                        "Favourite_language": [object Object]
+                    }
+                    ```
+
+                    ---
+                    ### Agenda
+                    ``` []
+                    1. Background
+                    2. What is a database migration?
+                    3. Different solutions
+                    4. What is Java's problem?
+                      * JPA
+                      * Hibernate
+                      * Flyway
+                    5. How to solve it
+                      * Spring Boot?
+                      * 
+                    ```
+
+                    ---
+
+                    ## Background
+                    * I'v been working with Rails and Django before <!-- .element: class="fragment fade-up" data-fragment-index="1" -->
+                    * Been working with Java the last 5 years <!-- .element: class="fragment fade-up" data-fragment-index="2" -->
+
+                    notes: How did I end up talking about migrations i java?
+                    
+                    ---
+                    ### What is a database migration?
+                    And why bother?
+                    
+                    --
+                    <!-- .slide: data-background-gradient="radial-gradient(#FEFEFB, #A7A285)" -->
+                    A description of how to transfer your database from one state to another
+                    
+                    --
+
+                    ### Example
+                    Add a column to a table with Books
+                    ```markdown [1-4]
+                    |Column   |Type   |
+                    |---------|-------|
+                    |BookTitle|VARCHAR|
+                    |Author   |VARCHAR|
+                    |Pages    |INTEGER|
+                    ```
+                    
+                    --
+                    Different frameworks have different solutions
+                    ---
+                    # Solutions
+                    ---
+                    <!-- .slide: data-transition="slide-out" -->
+                    ## Migration Tools
+                    --
+                    <!-- .slide: data-transition="fade-in" -->
+                    ## Migration Tools
+                    * Running each migration in order <!-- .element: class="fragment fade-up" data-fragment-index="1" -->
+                    * Make it reproducable <!-- .element: class="fragment fade-up" data-fragment-index="2" -->
+                    * Make sure to keep track of what have been run allready <!-- .element: class="fragment fade-up" data-fragment-index="3" -->
+                </script>
+            </section>
+            <section data-transition="convex">
+                <section>
+                    <h2>Migration Examples</h2>
+                </section>
+                <section data-markdown>
+                    <script type="text/template">
+                        ### Rember our Books table?
+                        ```md [1-4|1-5]
+                        |Column   |Type   |
+                        |---------|-------|
+                        |BookTitle|VARCHAR|
+                        |Author   |VARCHAR|
+                        |Pages    |INTEGER|
+                        ```
+                    </script>
+                </section>
+                <section data-auto-animate>
+                    <h3>Python and Django framework</h3>
+                    <pre data-id="code-animation"><code data-trim data-line-numbers class="language-python">
+                    class Book(models.Model):
+                        book_title = models.CharField(max_length=50)
+                        author = models.CharField(max_length=50)
+                    </code></pre>
+                </section>
+                <section data-auto-animate>
+                    <h3>Python and Django framework</h3>
+                    <pre data-id="code-animation"><code data-trim data-line-numbers="4" class="language-python">
+                    class Book(models.Model):
+                        book_title = models.CharField(max_length=50)
+                        author = models.CharField(max_length=50)
+                        pages = models.IntegerField()
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim data-line-numbers class="language-bash">
+                    $ python manage.py makemigrations
+                    Migrations for 'books':
+                    books/migrations/0002_auto.py:
+                        ~ Alter field pages on books
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim data-line-numbers class="language-python">
+                    class Migration(migrations.Migration):
+                        dependencies = [("migrations", "0001_initial")]
+                        operations = [
+                            migrations.AddField("Books", "Pages"),
+                        ]
+                    </code></pre>
+                </section>
+            </section>
+
+            <section data-markdown data-transition="convex" data-separator-vertical="^--$">
+                <script type="text/template">
+                    ## JPA  
+                    Jakarta Persistance. (Former Java Persistance API)
+                    ---
+                    Let you describe your database model with code
+                    
+                    --
+                    ```java [1-11|1,3,6,9]
+                    @Entity
+                    public class Book {
+                        @Id
+                        String isbn;
+                        
+                        @Column(name="bookTitle")
+                        String title;
+
+                        @OneToMany
+                        List<String> authors;
+                    }
+                    ```
+                    ---
+
+                    ## Hibernate
+                    
+                    --
+
+                    Implementation of JPA
+
+                    Also known as "Object-Relational Mapping" <!-- .element: class="fragment fade-up" data-fragment-index="1" -->
+                    
+                    --
+
+                    ### What does Hibernate do?
+                    * Connects your data models with your database through JPA
+                    * Works both ways
+
+                    notes: Mapping the JPA data model to your database and the other way around
+
+                    ---
+                    ### Python and Django framework
+                    ```bash [1|2-4]
+                    $ python manage.py makemigrations
+                    Migrations for 'books':
+                    books/migrations/0002_auto.py:
+                        ~ Alter field pages on books
+                    ```
+
+                    --
+
+                    ### Ruby and Rails framework
+                    ```bash []
+                    $ rails generate migration AddPagesToBooks pages:number
+                    ```
+
+                    --
+
+                    ### Java...
+                    ```bash []
+                    $ ???
+                    ```
+                    --
+                    ## Why
+
+                    --
+                    ### SQL
+                    ```sql []
+                    ALTER TABLE Books
+                    ADD COLUMN Pages INTEGER
+                    ```
+                    
+                    --
+                    
+                    
+                    --
+                    ### Rails (Ruby)
+                    ```ruby []
+                    class AddPagesToBooks < ActiveRecord::Migration
+                      def change
+                        add_column :books, :pages, :number
+                      end
+                    end
+                    ```
+                </script>
+            </section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/math/math.js"></script>
+
+    <script>
+
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            history: true,
+            center: true,
+
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX]
+        });
+
+    </script>
+
+</body>
+
+</html>
