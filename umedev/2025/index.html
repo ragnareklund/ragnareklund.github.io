@@ -270,7 +270,7 @@
                     ```java [6: 2-5|7]
                     @Test
                     void testMigration() {
-                        var result = Migration.configure()
+                        var result = MigrationTest.configure()
                                 .includePackages("adapter.database.models.jpa")
                                 .test();
 
@@ -278,29 +278,15 @@
                     }
                     ```
                     <!-- .element: data-id="migration-test" class="fragment fade-up" -->
-                    --
-                    <!-- .slide: data-auto-animate -->
-                    ## Resultatet
 
-                    ```java [6: 11-15]
-                    @Test
-                    void testMigration() {
-                        var result = Migration.configure()
-                                .includePackages("adapter.database.models.jpa")
-                                .test();
-
-                        assertThat(result).isEmpty();
-                    }
-
-                    /*
-                    java.lang.AssertionError: 
-                    Expecting empty but was:
+                    ```sql
+                    -- java.lang.AssertionError: 
+                    -- Expecting empty but was:
 
                     ALTER TABLE Books 
                     ADD COLUMN Pages INTEGER;
-                    */
                     ```
-                    <!-- .element: data-id="migration-test" -->
+                    <!-- .element: class="fragment fade-up" -->
                     --
                     ### Några intressanta konsekvenser
                     ```sql [1-4|2]
@@ -317,10 +303,7 @@
                         String id;
 
                         @OneToMany
-                        @JoinColumn(
-                            name = "collection_id", 
-                            foreignKey = @ForeignKey(
-                                name = "book_collection_fk"))
+                        @JoinColumn(foreignKey = @ForeignKey(name = "book_collection_fk"))
                         List<Book> books;
                     }
                     ```
