@@ -47,22 +47,35 @@
                     En beskrivning hur du tar en databas från ett tillstånd till ett annat
                     <!-- .element: style="font-family: monospace" -->
                     --
-                    ## Varför ska man ha datbasmigreringar?
-
-                    notes:
-                    * Ger en förutbestämd struktur på ens databas
-                    * Man kan följa förändringar i databasstrukturen
-                    * Databasmodellen kan hållas i synk med kodändringar i ens versionshantering
-                    --
+                    <!-- .slide: data-auto-animate -->
                     ## Exempel
                     Lägg till en kolumn i tabellen `Books`
-                    ```markdown [1-4|1-5]
+                    ```markdown []
+                    |Column   |Type   |
+                    |---------|-------|
+                    |BookTitle|VARCHAR|
+                    |Author   |VARCHAR|
+                    ```
+                    <!-- .element: data-id="markdown-pages" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ## Exempel
+                    Lägg till en kolumn i tabellen `Books`
+                    ```markdown [5]
                     |Column   |Type   |
                     |---------|-------|
                     |BookTitle|VARCHAR|
                     |Author   |VARCHAR|
                     |Pages    |INTEGER|
                     ```
+                    <!-- .element: data-id="markdown-pages" -->
+                    --
+                    ## Varför ska man ha datbasmigreringar?
+
+                    notes:
+                    * Ger en förutbestämd struktur på ens databas
+                    * Man kan följa förändringar i databasstrukturen
+                    * Databasmodellen kan hållas i synk med kodändringar i ens versionshantering
                     --
                     ### Låt oss titta närmare på hur man gör i 
                     ### python 🐍 och ruby 💎
@@ -236,7 +249,7 @@
                     ---
 
                     ## Dags att pussla 🧩
-                    ### Flyway + Hibernate + H2 <!-- .element: class="fragment fade-up" -->
+                    ### Flyway + H2 + Hibernate<!-- .element: class="fragment fade-up" -->
 
                     notes:
                     - 🧩 Vi har möjlighet att köra existerande migreringar för att få databasen i ett produktionsliknande läge
@@ -372,6 +385,9 @@
     <script>
 
         Reveal.initialize({
+            width: 1200,
+            height: 600,
+
             controls: true,
             progress: true,
             history: true,
