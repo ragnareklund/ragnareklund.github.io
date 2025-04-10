@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Make Migrations Great Again</title>
+
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/beige.css" id="theme">
+    <link rel="stylesheet" href="plugin/highlight/windows-95.css">
+</head>
+
+<body>
+
+    <div class="reveal">
+
+        <div class="slides">
+            <section data-markdown data-transition="convex" data-separator-vertical="^--$">
+                <script type="text/template">
+                    # Make Database Migrations Great Again
+
+                    ---
+
+                    ## Om mig
+                    ```json [2|3]
+                    {
+                        "Namn": "Ragnar Eklund"
+                        "Arbete": "Visionite / Skatteverket"
+                        "Favoritspråk": [object Object]
+                    }
+                    ```
+                    ---
+                    ## Vad gör jag här?
+                    notes: Jag är här för att dela med mig av erfarenheter kring databasmigreringar i `Java` ☕️.
+
+                    ---
+
+                    ## Bakgrund
+                    `💎` <!-- .element: class="fragment fade-up" --> `🐍` <!-- .element: class="fragment fade-up" --> `☕️` <!-- .element: class="fragment fade-up" -->
+                    notes: Jag har jobbat i projekt med både Ruby on Rails och Django Python
+                           Suttit med `Java` sen 2008 och de senaste fem åren dagligen
+                    
+                    ---
+                    ### Vad är en databasmigrering?
+                    --
+                    En beskrivning hur du tar en databas från ett tillstånd till ett annat
+                    <!-- .element: style="font-family: monospace" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ## Exempel
+                    Lägg till en kolumn i tabellen `Books`
+                    ```markdown []
+                    |Column   |Type   |
+                    |---------|-------|
+                    |BookTitle|VARCHAR|
+                    |Author   |VARCHAR|
+                    ```
+                    <!-- .element: data-id="markdown-pages" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ## Exempel
+                    Lägg till en kolumn i tabellen `Books`
+                    ```markdown [5]
+                    |Column   |Type   |
+                    |---------|-------|
+                    |BookTitle|VARCHAR|
+                    |Author   |VARCHAR|
+                    |Pages    |INTEGER|
+                    ```
+                    <!-- .element: data-id="markdown-pages" -->
+                    --
+                    ## Varför ska man ha datbasmigreringar?
+
+                    notes:
+                    * Ger en förutbestämd struktur på ens databas
+                    * Man kan följa förändringar i databasstrukturen
+                    * Databasmodellen kan hållas i synk med kodändringar i ens versionshantering
+                    --
+                    ### Låt oss titta närmare på hur man gör i 
+                    ### python 🐍 och ruby 💎
+                    ---
+                    <!-- .slide: data-auto-animate -->
+                    ### Python 🐍 och Django
+                    ```python [1-3]
+                    class Book(models.Model):
+                        book_title = models.CharField(max_length=50)
+                        author     = models.CharField(max_length=50)
+                    ```
+                    <!-- .element: data-id="python-pages" class="fragment fade-up" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ### Python 🐍 och Django
+                    ```python [4]
+                    class Book(models.Model):
+                        book_title = models.CharField(max_length=50)
+                        author     = models.CharField(max_length=50)
+                        pages      = models.IntegerField()
+                    ```
+                    <!-- .element: data-id="python-pages" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ### Identifiera förändringen ...
+                    ```bash []
+                    $ python manage.py makemigrations
+                    ```
+                    <!-- .element: data-id="python-make-migrations-animation" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ### ... och generera en migrering
+                    ```bash [2-4]
+                    $ python manage.py makemigrations
+                    Migrations for 'books':
+                    books/migrations/0002_books.py:
+                        ~ Alter field pages on books
+                    ```
+                    <!-- .element: data-id="python-make-migrations-animation" -->
+                    --
+                    ### Resultatet
+                    ```python []
+                    # books/migrations/0002_books.py
+                    class Migration(migrations.Migration):
+                        dependencies = [ ("migrations", "0001_initial") ]
+                        operations   = [ migrations.AddField("Books", "Pages") ]
+                    ```
+                    --
+                    ## Ruby 💎 och Rails 🛤
+                    --
+                    ### Lite annorlunda approach
+                    Fält i modeller genereras utifrån kolumner i databasen
+                    ```ruby
+                    # Tom klass som ärver av ApplicationRecord.
+                    class Book < ApplicationRecord
+                    end
+                    ```
+                    <!-- .element: class="fragment fade-up" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ### Generera en migrering
+                    ```bash []
+                    $ rails generate migration AddPagesToBooks pages:number
+                    ```
+                    <!-- .element: data-id="rails-make-migrations-animation" -->
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ### Generera en migrering
+                    ```ruby []
+                    # rails generate migration AddPagesToBooks pages:number
+                    class AddPagesToBooks < ActiveRecord::Migration
+                      def change
+                        add_column :books, :pages, :number
+                      end
+                    end
+                    ```
+                    <!-- .element: data-id="rails-make-migrations-animation" -->
+                    --
+                    ## Java ☕️ och Flyway
+                    Ingen av de stora javaramverken som `Spring Boot` har egna migreringsverktyg, utan förlitar sig på tredjepartsverktyg som `Flyway`
+                    --
+                    ### Flyway
+                    Använder sig främst av vanlig `SQL` och namnkonventioner för filnamn
+                    ```bash
+                    $ ls src/main/java/resources/db/migrations
+                    V1.0__init.sql
+                    V1.1__addPagesToBooks.sql
+                    ```
+                    <!-- .element: class="fragment fade-up" -->
+                    ```sql
+                    -- V1.1__addPagesToBooks.sql
+                    ALTER TABLE Books
+                    ADD COLUMN Pages INTEGER
+                    ```
+                    <!-- .element: class="fragment fade-up" -->
+                    --
+                    ### Generera migreringar...
+
+                    ```bash
+                    $ ???
+                    ```
+                    <!-- .element: class="fragment fade-up" -->                    
+                    ## Oh Noes! 🤬 <!-- .element: class="fragment fade-up" -->
+                    
+                    notes: 
+                    * Till skillnad från rails och django så kan Flyway inte generera migreringar.
+                    * Anledningen till det är för att Flyway inte har koll på dina datamodeller.
+                    
+                    ---
+                    
+                    ## Hur löser vi det?
+                    Vi behöver något som kan tolka javamodeller och koppla ihop dem med databasen 🤔 <!-- .element: class="fragment fade-up" -->
+                    --
+                    ## JPA + Hibernate
+                    --
+                    ## JPA
+                    Jakarta Persistance (tidigare **J**ava **P**ersistance **A**PI)
+                    notes: `JPA` låter dig beskriva hur datamodeller i `Java` ska översättas till databasmodeller
+                    --
+                    ## JPA Exempel
+                    ```java [1-11|1,3,6,9]
+                    @Entity
+                    public class Book {
+                        @Id
+                        String isbn;
+                        
+                        @Column(name = "bookTitle")
+                        String title;
+
+                        @Column(name = "author")
+                        String authors;
+                    }
+                    ```
+                    ---
+                    ## Hibernate
+                    En implementation av `JPA`
+
+                    Även känt som "Object-Relational Mapping" eller ORM <!-- .element: class="fragment fade-up" data-fragment-index="1" -->
+                    --
+                    ## Hibernate
+                    * Klistret mellan kod och databas  <!-- .element: class="fragment fade-up" data-fragment-index="1" -->
+                    * Möjlighet att generera <!-- .element: class="fragment fade-up" data-fragment-index="2" --> `SQL` från `JPA-modeller` <!-- .element: class="fragment fade-up" data-fragment-index="2" -->
+
+                    🥳<!-- .element: class="fragment fade-up" data-fragment-index="3" -->
+                    --
+
+                    `Spring Boot` visar sig ha möjlighet att lätt använda sig av det:
+
+                    ```yaml
+                    # src/main/resources/application.yaml
+                    spring:
+                      jpa:
+                        hibernate:
+                          ddl-auto: update
+                    ```
+                    <!-- .element: class="fragment fade-up" -->
+                    
+                    --
+                    ## Problematiskt
+                    notes: 
+                    * Det här är varken något som du eller skaparna av Spring vill att du använder dig av i produkton...
+                    * Du får inte med ändringarna i versionshistoriken
+                    * Okej i lokala test men problematiskt om man kör det mot gemensamma testdatabaser
+                    --
+                    Vi behöver en lokal miljö att köra migreringar mot
+                    --
+                    ## H2
+                    En snabb <!-- .element: class="fragment fade-up" data-fragment-index="1" --> `in-memory` databas som kan hantera väldigt många olika SQL-dialekter <!-- .element: class="fragment fade-up" data-fragment-index="1" -->
+
+                    Perfekt för test! ✨ <!-- .element: class="fragment fade-up" data-fragment-index="1" -->
+                    ---
+
+                    ## Dags att pussla 🧩
+                    ### Flyway + H2 + Hibernate<!-- .element: class="fragment fade-up" -->
+
+                    notes:
+                    - 🧩 Vi har möjlighet att köra existerande migreringar för att få databasen i ett produktionsliknande läge
+                    - 🧩 Hibernate DDL-Update skapar en SQL som beskriver skillnaden mellan dina JPA-modeller och din databas
+                    - 🧩 Vi kan köra de i H2 för att hålla allt lokalt
+                    --
+                    ### Paketera det hela som ett testbibliotek 📦
+                    --
+                    ## Vad löser vi med det?
+                    notes:
+                    * Man kan skriva ett enkelt test som kollar om JPA-modellerna stämmer överens med databasen
+                    * Om testet misslyckas så får man förslag på lämplig migrering
+                    * Det påverkar inga externa system
+                    --
+                    <!-- .slide: data-auto-animate -->
+                    ## Resultatet
+                    
+                    ```java [6: 2-5|7]
+                    @Test
+                    void testMigration() {
+                        var result = MigrationTest.configure()
+                                .includePackages("adapter.database.models.jpa")
+                                .test();
+
+                        assertThat(result).isEmpty();
+                    }
+                    ```
+                    <!-- .element: data-id="migration-test" class="fragment fade-up" -->
+
+                    ```sql
+                    -- java.lang.AssertionError: 
+                    -- Expecting empty but was:
+
+                    ALTER TABLE Books 
+                    ADD COLUMN Pages INTEGER;
+                    ```
+                    <!-- .element: class="fragment fade-up" -->
+                    --
+                    ### Några intressanta konsekvenser
+                    ```sql [1-4|2]
+                    ALTER TABLE IF EXISTS Book
+                    ADD CONSTRAINT FKs2s22xi4nya4ukpsvw6luwcl8
+                    FOREIGN key (collection_id)
+                    REFERENCES BookCollection;
+                    ```
+                    <!-- .element: class="fragment fade-up" -->
+                    ```java [6:1-12|7-10]
+                    @Entity
+                    public class BookCollection {
+                        @Id
+                        String id;
+
+                        @OneToMany
+                        @JoinColumn(foreignKey = @ForeignKey(name = "book_collection_fk"))
+                        List<Book> books;
+                    }
+                    ```
+                    <!-- .element: class="fragment fade-up" -->
+                    notes:
+                    * Man upptäcker skillnader mellan JPA-modellerna och databasen
+                    * Främst är det att JPA inte har koll på ens namngivna index utan föreslår slumpade
+                    ---
+                    ## Utmaningar
+                    --
+                    ### Navigera i Hibernates API:er
+                    ```java [85:1-11|2]
+                    var target = new StringWriter();
+                    SchemaManagementToolCoordinator.process(
+                        metadata.buildMetadata(),
+                        serviceRegistry,
+                        Map.ofEntries(
+                                entry(JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.UPDATE.getExternalHbm2ddlName()),
+                                entry(JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, target),
+                                entry(UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY, UniqueConstraintSchemaUpdateStrategy.SKIP),
+                                entry(SHOW_SQL, true),
+                                entry(FORMAT_SQL, true)),
+                        action -> {});
+                    ```
+                    <!-- .element: class="fragment fade-up" -->
+                    --
+                    ### SQL-dialekter
+                    notes:
+                    * Förslagen som genereras behöver vara anpassade efter den databasen som används men testerna körs i H2.
+                    * Hibernate har stöd för över ett 10-tal olika databaser och tillhörande dialekter.
+                    * H2 Stöder många med inte alla och inte alla quirks.
+                    * Eget interface för dialekter.
+                    --
+                    ### Constraints
+                    notes:
+                    * H2 slumpar fram namn på index genererade från constraints (uniqe) vilket gör att Hibernate inte hittar de och testerna går inte igenom.
+                    --
+                    ### Delete / Rename
+                    notes:
+                    * Inget stöd för att ta bort eller döpa om tabeller eller kolumner. Mer en feature än utmaning.
+                    * Designbeslut från gänget bakom hibernate
+                    ---
+                    # Framtiden
+                    notes:
+                    * Open source
+                    * Lägga till dialekter
+                    ---
+                    # Tack! 🙏
+                    ---
+                    # Frågor?
+                </script>
+            </section>
+        </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/math/math.js"></script>
+
+    <script>
+
+        Reveal.initialize({
+            width: 1200,
+            height: 600,
+
+            controls: true,
+            progress: true,
+            history: true,
+            center: true,
+            slideNumber: true,
+            totalTime: 900,
+
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.KaTeX]
+        });
+
+    </script>
+
+</body>
+
+</html>
